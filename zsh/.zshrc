@@ -1,4 +1,4 @@
-# Machine-specific settings (not tracked). Export WALLPAPER_DIR here if desired.
+# Early machine-specific environment (not tracked). Export WALLPAPER_DIR here.
 [[ -f "$HOME/.zshrc.local" ]] && source "$HOME/.zshrc.local"
 
 # Portable Homebrew setup for Apple Silicon and Intel Macs.
@@ -34,3 +34,6 @@ fi
 alias n='nvim'
 alias lg='lazygit'
 alias ld='lazydocker'
+
+# Late local overrides win over shared aliases, prompt, completion, and keymaps.
+[[ -f "$HOME/.zshrc.local.after" ]] && source "$HOME/.zshrc.local.after"

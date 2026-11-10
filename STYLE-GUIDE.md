@@ -118,7 +118,8 @@ indicator uses `yellow`. Tools without these concepts can omit these roles.
 
 The shared Ghostty configuration is the reference for typography:
 
-- **JetBrains Mono**, size **16**.
+- **JetBrains Mono Nerd Font** (Ghostty family `JetBrainsMono Nerd Font`), size **16**.
+  Installed with Homebrew's `font-jetbrains-mono-nerd-font` cask; not vendored.
 - Normal text: **Medium**; italic text: **Medium Italic**.
 - Bold and bold-italic use their normal bold faces, not a forced Medium weight.
 - Contextual alternates (`calt`) and ligatures (`liga`) enabled.
@@ -129,8 +130,9 @@ The shared Ghostty configuration is the reference for typography:
 background, not making the macOS window transparent. Wallpaper images remain
 local, outside Git, in `~/Pictures/Wallpapers`.
 
-If prompt symbols render as boxes, use a font with the required glyphs (for
-example an appropriate Nerd Font variant) rather than changing the palette.
+The bundled install now requests the Nerd Font variant for prompt/editor glyphs.
+If symbols still render as boxes, confirm the font installed and Ghostty reloaded
+with the requested family rather than changing the palette.
 
 ## Shell banner: separate Nord palette
 

@@ -9,7 +9,7 @@ brew "imagemagick"
 brew "tree-sitter-cli"
 
 cask "ghostty"
-cask "font-jetbrains-mono"
+cask "font-jetbrains-mono-nerd-font"
 
 # Docker Desktop, .NET SDKs, and language runtimes are project-specific:
 # install these separately as needed. Roslyn is installed by Neovim's Mason.

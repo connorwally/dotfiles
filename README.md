@@ -5,51 +5,236 @@ GNU Stow links reviewed config files into your home directory. Fonts and tools
 are installed through Homebrew; no wallpaper images or credentials are bundled.
 
 See the [terminal style guide](STYLE-GUIDE.md) for the preferred color palette,
-semantic color roles, typography, and conditional banner separators. It is a
-tool-independent reference for matching other editors and coding assistants,
-without copying Pi configuration.
+semantic roles, typography, and conditional banner separators. It is a
+tool-independent reference, without copying Pi configuration.
 
 ## Install on a Mac
 
 1. Install [Homebrew](https://brew.sh) and Git if needed.
-2. Clone this repository to a permanent location, for example `~/dotfiles`.
-3. Install dependencies:
+2. Clone to a permanent location, for example `~/dotfiles`:
 
    ```sh
+   git clone https://github.com/connorwally/dotfiles.git ~/dotfiles
    cd ~/dotfiles
+   ```
+
+3. If this machine normally uses a different Git identity (for example a work
+   account), set the intended **commit identity for this clone only**:
+
+   ```sh
+   git config --local user.name "Your Name"
+   git config --local user.email "your-personal-email@example.com"
+   git var GIT_AUTHOR_IDENT
+   ```
+
+   This does not change global identity or the account used to authenticate pushes.
+   Do not copy credentials into this repository.
+
+4. Install dependencies:
+
+   ```sh
    brew bundle
    ```
 
-4. **Back up existing configs outside their application config directories.**
-   Check `~/.zshrc`, `~/.config/nvim`, `~/.config/ghostty`,
-   `~/.config/starship.toml`, and Ghostty's alternative location:
-   `~/Library/Application Support/com.mitchellh.ghostty/` (`config` or
-   `config.ghostty`). Review your existing shell settings before replacing them.
-   This installer will refuse conflicts rather than overwrite or adopt files.
+   **Existing machine?** Read [Homebrew on existing machines](#homebrew-on-existing-machines)
+   first. Package selection below limits config linking, not this Brewfile.
+
 5. Preview, then explicitly install:
 
    ```sh
-   bash install.sh             # dry run; no links created
-   bash install.sh --apply
+   bash install.sh                         # preview; no changes
+   bash install.sh --backup                # preview backups for conflicts
+   bash install.sh --apply --backup        # back up conflicts, then link configs
    ```
 
-6. Open a new Ghostty window. Start `nvim` and allow LazyVim/Mason to install
-   plugins and Roslyn. Authenticate Copilot separately if you use it.
+   Without `--backup`, conflicts stop installation. No configuration is adopted,
+   overwritten, or deleted to resolve a conflict. Review existing shell settings:
+   a backup preserves them but does not merge them into the new configuration.
 
-Do not move the repo after installing: the symlinks point into it. To unlink:
+6. Open a new Ghostty window. Start `nvim` and allow LazyVim/Mason to install
+   plugins and language tools. **Roslyn installs on Neovim's first start, not
+   during `brew bundle` or Stow installation.** Wait for Mason to finish; C#
+   language features may not be ready immediately. Authenticate Copilot separately.
+
+7. Optionally bootstrap plugins headlessly, then check the lockfile as described
+   in [Neovim first run](#neovim-first-run-and-lockfile).
+
+The installer does not install Homebrew, download wallpapers, load launch agents,
+change your login shell, or launch Neovim. This repository omits Unity-specific
+configuration. Keep the original machine's Unity setup unless deliberately
+migrating it; testing with a separate `NVIM_APPNAME` profile is another option.
+
+## Backups and conflicts
+
+`--backup` moves conflicting targets to a unique directory such as:
+
+```text
+~/dotfiles-backup-20261110-153000/
+├── .zshrc
+├── .config/
+│   ├── nvim/
+│   ├── ghostty/
+│   └── starship.toml
+└── Library/Application Support/com.mitchellh.ghostty/config.ghostty
+```
+
+Only conflicts for the selected packages are considered. Already-correct repo
+symlinks are left alone. A conflicting ancestor symlink is backed up as a symlink,
+not followed into another location. For Neovim and Ghostty, conflicts inside their
+config directories cause the **whole application config directory** to be moved,
+so old Lua plugins/config fragments do not accidentally mix with the new setup.
+Ghostty's legacy `config` and `config.ghostty` files in Application Support are
+also checked when installing the Ghostty package.
+
+Backups retain relative paths and are never automatically deleted. The installer
+previews the planned moves, and uses Stow's simulation before changing links.
+When backups are necessary, that Stow check runs **after** the conflicts have been
+moved. If a later step fails, backups remain available; restoration is not automatic.
+
+To restore, first unlink the relevant package with Stow, inspect any new local
+files, then move the saved paths back to their original locations. Do not blindly
+copy backups over active symlinks: that could modify files in this repository.
+
+## Partial installs
+
+Available configuration packages: `zsh`, `nvim`, `ghostty`, `starship`.
+Omitting package names selects all four.
 
 ```sh
+bash install.sh zsh starship                    # preview only these packages
+bash install.sh --apply --backup nvim           # only Neovim
+bash install.sh --apply ghostty starship        # only terminal appearance/prompt
+```
+
+Unknown package names are rejected before changes are made. Conflicts in unselected
+packages do not block installation. Shell integrations for missing apps are guarded;
+shortcuts such as `n` still require their corresponding application to be installed.
+For the intended combined look, install both `ghostty` and `starship`.
+
+`brew bundle` still installs the **full** dependency list. For a deliberately
+minimal install, install `stow` and only the dependencies needed by your chosen
+packages instead; there is no automatic package-to-Brewfile filtering.
+
+## Update and restow after pulling
+
+```sh
+cd ~/dotfiles
+git pull --ff-only
+bash install.sh                       # inspect conflicts/changes
+bash install.sh --apply               # restow all packages
+```
+
+For a partial installation, **repeat the same package selection** on updates:
+
+```sh
+bash install.sh --apply zsh starship
+```
+
+The installer uses `stow --restow --no-folding`. Restowing reconciles links after
+files are added, removed, or moved. It does not back up conflicts unless you also
+pass `--backup`. Run `brew bundle` when you want to apply changed dependencies;
+review updates first. Open a new shell/reload the application afterward.
+
+Do not move the repo after installing: symlinks point into it. To unlink packages:
+
+```sh
+cd ~/dotfiles
 stow --target="$HOME" --delete zsh nvim ghostty starship
 ```
 
-The setup script does not install Homebrew, download wallpapers, load launch
-agents, or change your active shell. Neovim language tools may require additional
-runtimes (for example Node.js or an appropriate .NET SDK); install these for the
-projects you work on. Docker Desktop is optional and is not installed here.
+### Why `--no-folding`? The escape hatch for new files
+
+Stow normally can link a whole directory to the repo, for example making
+`~/.config/ghostty` itself a symlink. With `--no-folding`, the directories remain
+real directories and individual config files are linked instead. Generated
+wallpaper state/logs can then stay on the machine rather than appearing in Git.
+
+The trade-off: editing an **existing linked file** takes effect immediately, but
+adding a **new file to the repo** does not automatically create its target link.
+If a newly pulled plugin or config file appears to be ignored, the escape hatch
+is to **restow its package**:
+
+```sh
+bash install.sh --apply nvim
+```
+
+Do not work around this by copying the new file into place, using `stow --adopt`,
+or removing `--no-folding`; those can create conflicts or bring local files into
+the repository. Restowing keeps the file-level linking policy intact.
+
+## Homebrew on existing machines
+
+- `brew bundle` installs/updates listed dependencies; it does not migrate or
+  overwrite your shell/editor configuration. The separate installer handles links.
+- Existing manually installed apps such as Ghostty can conflict with cask installs.
+  Review Homebrew's message and preserve the existing app/config rather than using
+  force options blindly. You can install missing dependencies individually.
+- This repo installs **JetBrains Mono Nerd Font** using
+  `font-jetbrains-mono-nerd-font`; it does not vendor font binaries. Ghostty requests
+  the family `JetBrainsMono Nerd Font`, Medium/Medium Italic at size 16.
+- The Nerd Font can coexist with ordinary JetBrains Mono. You do not need to
+  uninstall the ordinary font. Reload Ghostty after installing the new font.
+- Do **not** run `brew bundle cleanup --force` as part of setup: it can remove
+  unrelated software already installed on the machine.
+- Docker Desktop, .NET SDKs, and project language runtimes are not installed here.
+  Install the ones needed for your projects (for example Node.js for relevant
+  language tools). Mason-installed servers may have their own runtime requirements.
+
+## Neovim first run and lockfile
+
+The repository tracks `nvim/.config/nvim/lazy-lock.json`. After linking the Neovim
+package, an optional plugin bootstrap is:
+
+```sh
+nvim --headless "+Lazy! sync" +qa
+```
+
+This loads your active Neovim configuration, downloads plugins, and may update the
+lockfile. **Only run it after confirming that `~/.config/nvim` points to the desired
+profile.** It is not run automatically by the installer. It is a plugin-sync step,
+not a guarantee that every parser/language server has finished installing.
+
+Immediately afterward (and after the first interactive start), check:
+
+```sh
+cd ~/dotfiles
+git status --short -- nvim/.config/nvim/lazy-lock.json
+git diff -- nvim/.config/nvim/lazy-lock.json
+```
+
+**Expected: no output, meaning the lockfile is clean.** A first-run rewrite to
+older commits has been observed. Do not blindly commit it as an intentional update:
+inspect the diff and resolve the plugin-version mismatch before treating bootstrap
+as complete. Also review any other first-run modifications with `git status --short`.
+If reproducibility is the goal and there are no intentional lockfile changes to
+keep, restore the committed file with
+`git restore --source=HEAD -- nvim/.config/nvim/lazy-lock.json`, then use
+`:Lazy restore` in Neovim to reinstall those recorded versions. Review first:
+`git restore` discards local changes to that file. Recheck the diff afterward.
+
+**Roslyn installs via Mason on the first Neovim start**, not during the shell
+installer. Open Neovim interactively, check `:Mason`, and allow the install to finish
+before checking C# with `:checkhealth` or attached LSP clients. Headless process exit
+alone does not prove Roslyn finished installing. Do not include Copilot credentials
+or machine-specific server state in Git.
+
+### Included behavior
+
+- Current LazyVim extras and plugin lockfile, including SQL, TypeScript, Vue, YAML,
+  and Dot alongside the existing extras.
+- Appearance, split shortcuts, Diffview, inline images, and Markdown defaults.
+- Roslyn for C# language features and formatting, rather than CSharpier.
+- C# four-space fallback; native EditorConfig applies project/nested overrides.
+  Roslyn also reads applicable EditorConfig settings.
+- C# on-type formatting and diagnostic refresh after pauses and on return to a
+  buffer. Return-to-buffer refresh uses a guarded private API; the source setup
+  used Neovim 0.12.5.
+- No Unity diagnostic suppression, Unity CLI setup, or `.meta` filters.
+- No Obsidian-specific ancestor `zImages` resolver pending review.
 
 ## Wallpapers
 
-Wallpapers are not included. Place your own PNG/JPG/JPEG images directly in:
+Wallpapers are not included. Place PNG/JPG/JPEG images directly in:
 
 ```sh
 mkdir -p ~/Pictures/Wallpapers
@@ -57,78 +242,63 @@ mkdir -p ~/Pictures/Wallpapers
 
 The script runs when an interactive Ghostty shell starts, including new tabs.
 It selects a random wallpaper on the first such startup each calendar day,
-avoiding the previous selection when more than one image exists. It does not
-rotate on a timer or on every tab. A missing/empty folder is harmless.
+avoiding the previous selection when possible. There is no timer. A missing/empty
+folder is harmless.
 
-The selected background is written to `~/.config/ghostty/daily-wallpaper.ghostty`
-and Ghostty is signalled to reload it. State, locks, and generated config stay
-local and are ignored by Git. Images are used directly, not copied into the repo.
-To force another selection, remove `~/.config/ghostty/daily-wallpaper.state`
+Output: `~/.config/ghostty/daily-wallpaper.ghostty`. State, locks, and generated
+config remain local and ignored by Git. Images are used directly, not copied into
+the repo. To force another selection, remove `~/.config/ghostty/daily-wallpaper.state`
 and open a new Ghostty shell.
 
-If migrating from the old scheduled setup on the original Mac, unload its
-launch agent separately before using this version:
+When migrating from the old scheduled setup, unload it separately if still present:
 
 ```sh
 launchctl bootout "gui/$(id -u)" "$HOME/Library/LaunchAgents/com.connor.ghostty.daily-wallpaper.plist"
 ```
 
-Then move that plist out of `~/Library/LaunchAgents` so it does not return at
-login. This repository neither installs nor automatically removes that old job.
+Move the old plist out of `~/Library/LaunchAgents` so it cannot return at login.
+The installer does not remove scheduled tasks. This migration has already been
+performed on the original machine.
 
 ## Terminal completion
 
-Tab uses built-in Zsh completion with case-insensitive prefix matching, falling
-back to substring matching. For example, in a folder containing `Bitforged/`:
+Tab uses case-insensitive prefix matching, then substring matching:
 
 ```text
 cd forg<Tab>  →  cd Bitforged/
 ```
 
-When there are several matches, Tab cycles through a selectable menu. This is
-substring matching, not arbitrary fuzzy subsequence matching. It searches the
-command's normal completion candidates, not every directory on your Mac.
-Docker Desktop completions are loaded only if their directory exists.
+Multiple matches open a selectable menu. This searches normal completion candidates,
+not every directory on your Mac. Docker Desktop completions load only if present.
 
-## Neovim
+## Local shell hooks and publishing
 
-- Preserves the current LazyVim extras list and plugin lockfile, including SQL,
-  TypeScript, Vue, YAML, and Dot alongside the existing extras.
-- Keeps appearance, split shortcuts, Diffview, inline images, and Markdown defaults.
-- Uses Roslyn for C# language features and formatting, rather than CSharpier.
-- C# defaults to four spaces; Neovim's native EditorConfig support applies
-  project and nested `.editorconfig` overrides afterward. Do not disable it if
-  you want this behavior. Roslyn also reads applicable EditorConfig settings.
-- Keeps C# on-type formatting and diagnostic refresh after pauses and on return
-  to a buffer. The return-to-buffer refresh uses an optional private Neovim API;
-  it is guarded if unavailable. The source configuration used Neovim 0.12.5.
-- Excludes Unity diagnostic suppression, Unity CLI setup, and `.meta` filters.
-- Omits the Obsidian-specific ancestor `zImages` resolver pending review.
+Two optional, untracked hooks have different purposes:
 
-The font is JetBrains Mono, installed via Homebrew rather than vendored.
-The prompt includes special glyphs; if any render as boxes, install a Nerd Font
-variant and adjust Ghostty's `font-family` locally as appropriate.
+- **`~/.zshrc.local`**: early environment settings, before Homebrew, completion,
+  wallpaper selection, and prompt initialization. For example:
 
-## Local settings and publishing
+  ```sh
+  export WALLPAPER_DIR="$HOME/Pictures/My Wallpapers"
+  ```
 
-Optional `~/.zshrc.local` is loaded before the shared shell configuration. Keep
-machine-specific environment variables there, for example:
+- **`~/.zshrc.local.after`**: loaded last, so local aliases, keybindings, completion
+  styles, and prompt overrides take priority over shared defaults. Use the early
+  hook for settings that must exist before initialization; the late hook does not
+  rerun earlier startup steps.
 
-```sh
-export WALLPAPER_DIR="$HOME/Pictures/My Wallpapers"
-```
-
-Keep credentials in a credential manager, not this repository. Git ignores are
-only a safety net: review `git diff --cached` before publishing. Configuration
-changes made through the symlinks modify this repository. Neovim may update its
-tracked lockfile as plugins change. The included Neovim starter license is kept
-at `nvim/.config/nvim/LICENSE`; third-party plugins/fonts retain their own licenses.
+Keep credentials in a credential manager. Review `git diff --cached` before
+publishing; ignores are only a safety net. Changes through symlinks modify this
+repository. The Neovim starter license is retained at `nvim/.config/nvim/LICENSE`;
+third-party plugins/fonts retain their own licenses.
 
 ## Quick manual checks after installation
 
-- Open Ghostty: verify font, prompt, and background. With no wallpapers, it should
-  still open normally. New tabs should retain the same day's selection.
-- In `~/Projects`, try `cd forg<Tab>` with a `Bitforged` folder present.
-- Open C# in Neovim: confirm Roslyn attaches, formatting works, and a project's
-  `.editorconfig` indentation overrides the four-space fallback.
-- Open Markdown and a Git diff to check image support and Diffview shortcuts.
+- Ghostty: verify font/glyphs, prompt, fullscreen behavior, and background. With no
+  wallpapers, startup should still work; new tabs retain the same day's selection.
+- In `~/Projects`, try `cd forg<Tab>` with a `Bitforged` directory present.
+- Check prompt separators inside and outside Git: only the final triangle should
+  have a transparent background.
+- Neovim: confirm the lockfile remains clean after bootstrap/first run; wait for
+  Roslyn in Mason, then verify C# formatting and project EditorConfig precedence.
+- Check Markdown images and Diffview shortcuts. Verify a late shell override wins.
