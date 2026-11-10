@@ -1,0 +1,16 @@
+font-family = "JetBrains Mono"
+font-style = Medium
+font-style-italic = Medium Italic
+font-size = 16
+font-feature = calt
+font-feature = liga
+
+macos-non-native-fullscreen = true
+
+# An opaque window with a dim wallpaper, rather than desktop transparency.
+background-opacity = 1
+background-blur = false
+background-image-fit = cover
+background-image-opacity = 0.05
+# Optional until the first shell selects a wallpaper; relative to this config.
+config-file = ?daily-wallpaper.ghostty

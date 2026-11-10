@@ -1,0 +1,70 @@
+"$schema" = 'https://starship.rs/config-schema.json'
+
+# Nord powerline banner. Triangle separators require a Powerline-capable font.
+format = """
+$username\
+[](fg:frost_dark bg:frost_light)\
+$directory\
+${custom.directory_end_plain}${custom.directory_end_git}\
+($git_branch$git_status[](fg:polar)) """
+palette = 'nord'
+add_newline = true
+
+[palettes.nord]
+polar = '#2E3440'
+polar_light = '#4C566A'
+snow = '#ECEFF4'
+frost_dark = '#5E81AC'
+frost_light = '#88C0D0'
+green = '#A3BE8C'
+red = '#BF616A'
+purple = '#B48EAD'
+
+[username]
+show_always = true
+style_user = 'fg:snow bg:frost_dark bold'
+style_root = 'fg:red bg:frost_dark bold'
+format = '[  $user ]($style)'
+
+[directory]
+style = 'fg:polar bg:frost_light bold'
+format = '[ $path$read_only ]($style)'
+truncation_length = 5
+truncation_symbol = '…/'
+truncate_to_repo = false
+read_only = ' (read-only)'
+home_symbol = '~'
+
+[git_branch]
+style = 'fg:green bg:polar'
+symbol = ' '
+format = '[ $symbol$branch ]($style)'
+
+# Counts appear only when the corresponding Git state is present.
+[git_status]
+style = 'fg:frost_light bg:polar'
+format = '([$all_status$ahead_behind]($style))'
+ahead = '↑${count} '
+behind = '↓${count} '
+diverged = '↑${ahead_count} ↓${behind_count} '
+conflicted = '!${count} '
+untracked = '?${count} '
+modified = '~${count} '
+staged = '+${count} '
+renamed = '»${count} '
+deleted = '✘${count} '
+stashed = '≡${count} '
+
+# Use the Git section's background only when the directory connects to Git.
+[custom.directory_end_plain]
+when = '! git rev-parse --git-dir >/dev/null 2>&1'
+format = '[](fg:frost_light)'
+
+[custom.directory_end_git]
+when = 'git rev-parse --git-dir >/dev/null 2>&1'
+format = '[](fg:frost_light bg:polar)'
+
+[character]
+success_symbol = '[❯](bold green)'
+error_symbol = '[❯](bold red)'
+vimcmd_symbol = '[❮](bold purple)'

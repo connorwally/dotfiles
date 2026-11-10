@@ -1,0 +1,12 @@
+.DS_Store
+*.local
+.env
+.env.*
+
+# Runtime output must not be published, even if generated inside a Stow folder.
+**/daily-wallpaper.ghostty
+**/daily-wallpaper.state*
+**/daily-wallpaper.log
+**/daily-wallpaper.ghostty.*
+**/wallpapers/
+**/.zcompdump*
