@@ -4,6 +4,11 @@ Portable macOS configuration for LazyVim/Neovim, Ghostty, Zsh, and Starship.
 GNU Stow links reviewed config files into your home directory. Fonts and tools
 are installed through Homebrew; no wallpaper images or credentials are bundled.
 
+See the [terminal style guide](STYLE-GUIDE.md) for the preferred color palette,
+semantic color roles, typography, and conditional banner separators. It is a
+tool-independent reference for matching other editors and coding assistants,
+without copying Pi configuration.
+
 ## Install on a Mac
 
 1. Install [Homebrew](https://brew.sh) and Git if needed.
