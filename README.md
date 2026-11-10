@@ -232,6 +232,37 @@ or machine-specific server state in Git.
 - No Unity diagnostic suppression, Unity CLI setup, or `.meta` filters.
 - No Obsidian-specific ancestor `zImages` resolver pending review.
 
+### Midnight Moon appearance preset
+
+`lua/config/theme.lua` is the editable palette and highlight preset, loaded by
+`lua/plugins/transparency.lua`. It extends Tokyo Night Moon rather than forking
+or replacing its plugin integrations. The upstream colorscheme name remains
+`tokyonight`; “Midnight Moon” is the name of this customization preset.
+
+- Magenta keywords/headings/borders, pink strings/inline code, brighter blue
+  `#73B9F8` functions, yellow types, and pale variables.
+- Transparent main editor/sidebar backgrounds preserve Ghostty's wallpaper.
+- Floating windows, completion menus, status lines, and cursor-line surfaces use
+  dark `#1E2030`; selections use `#2F334D`. This darkens surfaces, not all text.
+- Diff additions remain green; errors remain red. Treesitter and common LSP
+  semantic-token groups follow the same syntax roles.
+
+After pulling this preset onto an already linked machine, restow `nvim` so the
+new `theme.lua` file is linked, then restart Neovim. To adjust it, edit the palette
+or `on_highlights` in that file; the [style guide](STYLE-GUIDE.md) is the reference.
+To return to the old appearance, replace `opts = require("config.theme")` in
+`transparency.lua` with the original transparent Tokyo Night options:
+
+```lua
+opts = {
+  style = "moon",
+  transparent = true,
+  styles = { sidebars = "transparent", floats = "transparent" },
+},
+```
+
+No plugin update or lockfile change is required to apply this preset.
+
 ## Wallpapers
 
 Wallpapers are not included. Place PNG/JPG/JPEG images directly in:

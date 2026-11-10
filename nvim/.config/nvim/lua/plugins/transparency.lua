@@ -1,13 +1,7 @@
 return {
   {
     "folke/tokyonight.nvim",
-    opts = {
-      -- Let Ghostty's background opacity and blur show through.
-      transparent = true,
-      styles = {
-        sidebars = "transparent",
-        floats = "transparent",
-      },
-    },
+    -- Midnight Moon: palette + semantic overrides, still based on Tokyo Night.
+    opts = require("config.theme"),
   },
 }

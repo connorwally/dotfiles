@@ -166,6 +166,21 @@ For the current username → folder → optional Git banner:
 This is the desired general rule for future sections too; application-specific
 configuration must implement it explicitly rather than assuming automatic layout.
 
+## Neovim implementation: Midnight Moon
+
+The dotfiles Neovim preset implements this guide in
+`nvim/.config/nvim/lua/config/theme.lua`, loaded by the Tokyo Night plugin spec in
+`lua/plugins/transparency.lua`. It keeps the upstream Moon base and plugin
+integrations; it is a customization preset, not a separate `:colorscheme` name.
+
+The main buffer and sidebars stay transparent. Floats, completion menus, status
+lines, and cursor-line backgrounds use `surface` (`#1E2030`) for a darker, quieter
+look, while selections use `surface-highlight`. Syntax overrides align keywords
+with magenta, strings with pink, functions with the custom blue, and types with
+yellow. Common LSP semantic-token groups are included so language servers do not
+immediately undo those choices. Language/plugin-specific groups may still need
+small follow-up adjustments after visual inspection.
+
 ## Porting to another tool
 
 1. Use built-in theme customization if available. Do not copy another assistant's
